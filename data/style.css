@@ -41,6 +41,7 @@ header {
   margin: 20px;
   background-color: white;
   border-style: solid;
+  width: 45%;
 }
 
 .right-section-yellow {
@@ -53,6 +54,7 @@ header {
   margin: 20px;
   background-color: yellow;
   border-style: solid;
+  width: 45%;
 }
 
 .left-section-red {
@@ -65,6 +67,7 @@ header {
   margin: 20px;
   background-color: red;
   border-style: solid;
+  width: 45%;
 }
 
 .team-card {
@@ -93,7 +96,9 @@ header {
 
 .score-separator {
   font-size: 175px;
-  margin: 0 20px;
+  margin: 0 0px;
+  width: 10%;
+  text-align: center;
 }
 
 .logo {

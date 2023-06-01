@@ -116,8 +116,9 @@ void IRAM_ATTR score_1_decrease() {
     digitalWrite(LED_1, LOW);
     digitalWrite(LED_2, LOW);
     GPIO_State = 0;
-    player_1.score--;
-    
+    if(player_1.score >0){
+      player_1.score--;
+    }
   }
   last_interrupt_time = interrupt_time;
 }
@@ -144,7 +145,10 @@ void IRAM_ATTR score_2_decrease() {
     digitalWrite(LED_1, LOW);
     digitalWrite(LED_2, LOW);
     GPIO_State = 0;
-    player_2.score--;
+    if(player_2.score >0){
+        player_2.score--;
+    }
+    
     
   }
   last_interrupt_time = interrupt_time;
@@ -306,20 +310,24 @@ void loop() {
     score_2_lastState = player_2.score;
   }
  
-  
-  display.setCursor(15,0);
+  display.clearDisplay();
+  display.setCursor(15,10);
   display.setTextSize(1);
   display.println("Team 1     Team 2" );
   display.println("");
   display.setCursor(20,30);
-  display.setTextSize(3);
+  if(player_1.score < 10 && player_2.score <10 ){
+      display.setTextSize(3);
+  }else{
+      display.setTextSize(2);
+  }
   display.println(String(player_1.score) + " : " + String(player_2.score));
   display.display();
   
-  unsigned long cleanup_time = millis();
+  /* unsigned long cleanup_time = millis();
   if (cleanup_time - last_cleanup_time > 4000){
     ws.cleanupClients(); 
     last_cleanup_time = cleanup_time;
-  }
+  } */
 
 }
