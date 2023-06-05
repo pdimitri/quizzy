@@ -15,7 +15,11 @@
 #include <Adafruit_SSD1306.h>
 #include <Arduino_JSON.h>
 
-
+//Connection for the OLED Display
+// VCC = 3.3V
+//GND = GND
+//SDA = 21
+//SDL= 22
 
 // Set GPIOs for LED_1 and PIR Motion Sensor
 const int LED_1 = 5;
