@@ -14,6 +14,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Arduino_JSON.h>
+#include "YX5300Sound.h"
 
 //Connection for the OLED Display
 // VCC = 3.3V
@@ -50,6 +51,8 @@ int score_2_lastState = 0;
 
 static unsigned long last_interrupt_time = 0;
 static unsigned long last_cleanup_time = 0;
+static int8_t Send_buf[8] = {0};
+int soundToPlay = 0;
 
 Adafruit_SSD1306 display = Adafruit_SSD1306(128, 64, &Wire, -1);
 
@@ -63,16 +66,30 @@ void notifyClients(String gameState) {
   ws.textAll(gameState);
 }
 
+//Used to send Serial Command to the YX5300 UART MP3-Player
+void sendCommand(byte command, byte option1, byte option2){
+  Send_buf[0] = 0x7e;
+  Send_buf[1] = 0xff;
+  Send_buf[2] = 0x06;
+  Send_buf[3] = command;
+  Send_buf[4] = 0x00;
+  Send_buf[5] = option1;
+  Send_buf[6] = option2;
+  Send_buf[7] = 0xef;
 
+  for(uint8_t i=0; i<8; i++){
+    Serial2.write(Send_buf[i]);
+  }
+}
 
-// Checks if motion was detected, sets LED_1 HIGH and starts a timer
+// Event Handler Interrupt Function for Buzzer 1
 void IRAM_ATTR Btn_1_pressed() {
   
   if(!player_1.blocked){
     player_2.blocked = true;
     digitalWrite(LED_1, HIGH);
     GPIO_State=1;
-    
+    soundToPlay = 1;
   }
   
 }
@@ -82,7 +99,7 @@ void IRAM_ATTR Btn_2_pressed() {
     player_1.blocked = true;
     digitalWrite(LED_2, HIGH);
     GPIO_State=2;
-    
+    soundToPlay = 2;
   }
 }
 
@@ -232,6 +249,15 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Setup started");
 
+  //Serial Port for YX5300 Sound Module TS PIN 16, TX PIN 17
+  Serial2.begin(9600, SERIAL_8N1,16,17);
+  delay(500);
+
+  //Initializing Sound Module and choosing SD-Card Reader
+  sendCommand(CMD_SEL_DEV,0,DEV_TF);
+  sendCommand(CMD_SET_VOLUME,0x00,0x1E);
+  delay(200);
+
   
   // Configure Input GPIOs
   pinMode(player_1.pin, INPUT_PULLUP);
@@ -276,16 +302,6 @@ void setup() {
     Serial.print("AP IP address: ");
     Serial.println(IP);
 
- /*  WiFi.begin("ssid", "pass");
-  Serial.begin(115200);
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
-    delay(500);
-  }
-  Serial.println();
-  Serial.print("IP Address: ");
-  Serial.println(WiFi.localIP()) */; 
-
   initWebSocket();
 
   // Route for root / web page
@@ -307,6 +323,11 @@ void setup() {
 }
 
 void loop() {
+  if(soundToPlay>0){
+    sendCommand(CMD_PLAY_FOLDER_FILE,1,soundToPlay);
+    soundToPlay=0;
+  }
+
   if((GPIO_State != GPIO_lastState)|| (player_1.score != score_1_lastState) || (player_2.score != score_2_lastState)){
     notifyClients(getGameState());
     GPIO_lastState = GPIO_State;
